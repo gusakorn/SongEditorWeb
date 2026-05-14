@@ -468,6 +468,41 @@ export default {
       return orderedSongToSave;
     },
 
+    prepareSongForOsaJson() {
+      const flatSong = { ...this.song };
+
+      // Generate UUID if missing
+      if (!flatSong.uuid) {
+        flatSong.uuid = createUuid();
+        this.song.uuid = flatSong.uuid;
+      }
+
+      // Sync timestamps
+      const isoNow = currentIsoSecond();
+      flatSong.last_modified = isoNow;
+      flatSong.lastModified = isoNow; // OSA Beta uses camelCase
+      this.song.last_modified = isoNow;
+
+      // Extract Capo value (flatten)
+      if (flatSong.capo !== undefined && flatSong.capo !== null && flatSong.capo !== '') {
+        flatSong.capo = (typeof flatSong.capo === 'object') 
+          ? (flatSong.capo['#text'] !== undefined ? flatSong.capo['#text'] : '')
+          : flatSong.capo;
+      }
+
+      // Map time_sig to timesig for OSA Beta
+      if (flatSong.time_sig) {
+        flatSong.timesig = flatSong.time_sig;
+      }
+
+      // Clean up aliases used for XML parsing just to be neat
+      Object.keys(LEGACY_FIELD_ALIASES).forEach((legacyKey) => {
+        delete flatSong[legacyKey];
+      });
+
+      return flatSong;
+    },
+
     buildSongXml() {
       const builder = new XMLBuilder({ ignoreAttributes: false, format: true });
       return builder.build({ song: this.prepareSongForSave() });
@@ -647,7 +682,7 @@ export default {
 
     async guardarEnOsa() {
       try {
-        const songData = this.prepareSongForSave();
+        const songData = this.prepareSongForOsaJson();
         // Inject remote metadata required by OSA API
         songData.folder = this.currentRemoteOsaInfo.folder;
         songData.filename = this.currentRemoteOsaInfo.filename;
@@ -655,12 +690,25 @@ export default {
         this.showAlert({ message: this.t.osaSaveRemote });
         await osaApi.saveSongToOsa(this.osaEndpoint, songData);
         
+        // Trigger remote device to reload the song (replaces REFRESH websocket logic)
+        try {
+          await osaApi.sendRemoteCommand(this.osaEndpoint, songData.folder, songData.filename);
+        } catch (remoteErr) {
+          console.warn("Song saved, but failed to trigger remote load:", remoteErr);
+        }
+
         this.takeSongSnapshot();
         this.showAlert({ message: this.t.osaSaveSuccess });
       } catch (err) {
         console.error("Error saving to OSA:", err);
         const detail = err.message || "Unknown error";
-        this.showAlert({ message: `${this.t.osaError}: ${detail}`, title: "Error" });
+        
+        // Expose partial payload for debugging the 400 error
+        const payloadPreview = JSON.stringify(this.prepareSongForOsaJson()).substring(0, 100) + "...";
+        this.showAlert({ 
+          message: `${this.t.osaError}: ${detail}\n\n[Debug Payload] ${payloadPreview}`, 
+          title: "Error 400 Debug" 
+        });
       }
     },
 

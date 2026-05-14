@@ -26,6 +26,18 @@ export async function fetchSongData(endpoint, folder = "", filename = "") {
   return await response.json();
 }
 
+export async function sendRemoteCommand(endpoint, folder, filename) {
+  const url = `http://${buildBaseUrl(endpoint)}/api/remote`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ folder, filename })
+  });
+  if (!response.ok) throw new Error(`Failed to send remote command: ${response.status}`);
+  return await response.json();
+}
 export function createWebSocket(endpoint, onMessage, onOpen, onClose, onError) {
   const wsUrl = `ws://${buildBaseUrl(endpoint)}/updates`;
   const socket = new WebSocket(wsUrl);
