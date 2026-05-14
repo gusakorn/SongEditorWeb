@@ -25,6 +25,10 @@
       @yt-rewind="ytRewind"
       :osaConnected="osaConnected"
       :osaConnecting="osaConnecting"
+      :osaLinkState="osaLinkState"
+      :osaLinkLabel="osaLinkLabel"
+      :osaLinkTitle="osaLinkTitle"
+      :saveTooltip="saveTooltip"
       @open-osa-settings="showOsaSettings = true"
       @toggle-osa-connection="toggleOsaConnection"
     />
@@ -184,7 +188,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
           <h3>{{ alertModal.title }}</h3>
         </div>
-        <p class="modal-text">{{ alertModal.message }}</p>
+        <div class="modal-text alert-message">{{ alertModal.message }}</div>
         <div class="modal-buttons">
           <button class="btn-close-modal" @click="alertModal.show = false">{{ t.btnClose }}</button>
         </div>
@@ -303,6 +307,8 @@ const SONG_XML_FIELD_ORDER = [
   'keyoriginal',
   'preferred_instrument',
   'aka',
+  'autoscrolldelay',
+  'autoscrolllength',
   'midi',
   'midi_index',
   'notes',
@@ -316,6 +322,71 @@ const SONG_XML_FIELD_ORDER = [
   'link_other',
   'abcnotation',
   'abctranspose'
+];
+
+const OSA_SAVE_FIELD_MAP = {
+  uuid: 'uuid',
+  last_modified: 'lastModified',
+  title: 'title',
+  author: 'author',
+  copyright: 'copyright',
+  lyrics: 'lyrics',
+  hymn_number: 'hymnnum',
+  ccli: 'ccli',
+  theme: 'theme',
+  alttheme: 'alttheme',
+  user1: 'user1',
+  user2: 'user2',
+  user3: 'user3',
+  beatbuddysong: 'beatbuddysong',
+  beatbuddykit: 'beatbuddykit',
+  drummer: 'drummer',
+  drummerkit: 'drummerKit',
+  key: 'key',
+  keyoriginal: 'keyoriginal',
+  preferred_instrument: 'preferredInstrument',
+  previewoverride: 'previewoverride',
+  time_sig: 'timesig',
+  tempo: 'tempo',
+  aka: 'aka',
+  autoscrolldelay: 'autoscrolldelay',
+  autoscrolllength: 'autoscrolllength',
+  duration: 'autoscrolllength',
+  predelay: 'autoscrolldelay',
+  pad_file: 'padfile',
+  loop_audio: 'padloop',
+  midi: 'midi',
+  midi_index: 'midiindex',
+  capo: 'capo',
+  custom_chords: 'customchords',
+  notes: 'notes',
+  abcnotation: 'abc',
+  abctranspose: 'abctranspose',
+  link_youtube: 'linkyoutube',
+  link_web: 'linkweb',
+  link_audio: 'linkaudio',
+  link_other: 'linkother',
+  presentation: 'presentationorder'
+};
+
+const OSA_RUNTIME_FIELDS = [
+  'groupedSections',
+  'songSections',
+  'songSectionHeadings',
+  'songSectionTypes',
+  'presoOrderSongSections',
+  'presoOrderSongHeadings',
+  'lyricsUndos',
+  'lyricsUndosPos',
+  'inlineMidiMessages',
+  'currentSection',
+  'currentlyLoading',
+  'editingAsChoPro',
+  'hasExtraStuff',
+  'isImageSlide',
+  'pdfPageCurrent',
+  'pdfPageCount',
+  'showstartofpdf'
 ];
 
 export default {
@@ -357,7 +428,9 @@ export default {
       osaConnecting: false,
       osaSocket: null,
       showOsaSettings: false,
-      currentRemoteOsaInfo: null // { folder, filename }
+      currentRemoteOsaInfo: null, // { folder, filename, id, songid, filetype }
+      currentRemoteOsaRaw: null,
+      osaRefreshSuppressedUntil: 0
     };
   },
 
@@ -367,6 +440,30 @@ export default {
     },
     t() {
       return translations[this.lang];
+    },
+    osaRemoteLinkInfo() {
+      const folder = this.currentRemoteOsaInfo?.folder || '';
+      const filename = this.currentRemoteOsaInfo?.filename || '';
+      if (!folder || !filename) return '';
+      return `${folder}/${filename}`;
+    },
+    osaLinkState() {
+      return this.osaRemoteLinkInfo ? 'linked' : 'local';
+    },
+    osaLinkLabel() {
+      return this.osaRemoteLinkInfo ? this.t.osaLinked : this.t.osaLocalOnly;
+    },
+    osaLinkTitle() {
+      return this.osaRemoteLinkInfo
+        ? `${this.t.osaLinked}: ${this.osaRemoteLinkInfo}`
+        : this.t.osaLocalOnly;
+    },
+    saveTooltip() {
+      if (!this.osaConnected) return this.t.save;
+      if (this.osaRemoteLinkInfo) {
+        return `${this.t.osaSaveRemoteLinked}: ${this.osaRemoteLinkInfo}`;
+      }
+      return this.t.osaSaveLocalOnly;
     },
     // ── Duration split into min and sec ──
     durationMin: {
@@ -469,38 +566,86 @@ export default {
     },
 
     prepareSongForOsaJson() {
-      const flatSong = { ...this.song };
+      const sourceSong = { ...this.song };
+      const baseRemoteSong = this.currentRemoteOsaRaw
+        ? JSON.parse(JSON.stringify(this.currentRemoteOsaRaw))
+        : {};
 
-      // Generate UUID if missing
-      if (!flatSong.uuid) {
-        flatSong.uuid = createUuid();
-        this.song.uuid = flatSong.uuid;
+      if (!sourceSong.uuid) {
+        sourceSong.uuid = createUuid();
+        this.song.uuid = sourceSong.uuid;
       }
 
-      // Sync timestamps
-      const isoNow = currentIsoSecond();
-      flatSong.last_modified = isoNow;
-      flatSong.lastModified = isoNow; // OSA Beta uses camelCase
+      const isoNow = new Date().toISOString();
+      sourceSong.last_modified = isoNow;
       this.song.last_modified = isoNow;
 
-      // Extract Capo value (flatten)
-      if (flatSong.capo !== undefined && flatSong.capo !== null && flatSong.capo !== '') {
-        flatSong.capo = (typeof flatSong.capo === 'object') 
-          ? (flatSong.capo['#text'] !== undefined ? flatSong.capo['#text'] : '')
-          : flatSong.capo;
+      if (sourceSong.capo !== undefined && sourceSong.capo !== null && sourceSong.capo !== '') {
+        sourceSong.capo = (typeof sourceSong.capo === 'object')
+          ? (sourceSong.capo['#text'] !== undefined ? sourceSong.capo['#text'] : '')
+          : sourceSong.capo;
       }
 
-      // Map time_sig to timesig for OSA Beta
-      if (flatSong.time_sig) {
-        flatSong.timesig = flatSong.time_sig;
-      }
-
-      // Clean up aliases used for XML parsing just to be neat
-      Object.keys(LEGACY_FIELD_ALIASES).forEach((legacyKey) => {
-        delete flatSong[legacyKey];
+      const osaPayload = { ...baseRemoteSong };
+      OSA_RUNTIME_FIELDS.forEach((field) => {
+        delete osaPayload[field];
       });
 
-      return flatSong;
+      Object.entries(OSA_SAVE_FIELD_MAP).forEach(([sourceKey, targetKey]) => {
+        const value = sourceSong[sourceKey];
+        if (value !== undefined && value !== null) {
+          osaPayload[targetKey] = String(value);
+        }
+      });
+
+      const remoteFolder = this.currentRemoteOsaInfo?.folder || '';
+      const remoteFilename = this.currentRemoteOsaInfo?.filename || '';
+      const remoteSongId = this.currentRemoteOsaInfo?.songid || (remoteFolder && remoteFilename ? `${remoteFolder}/${remoteFilename}` : '');
+      const remoteId = this.currentRemoteOsaInfo?.id;
+
+      if (remoteSongId) {
+        osaPayload.songid = remoteSongId;
+      }
+      if (remoteId !== undefined && remoteId !== null && remoteId !== '') {
+        osaPayload.id = remoteId;
+      }
+
+      osaPayload.TAG = 'Song';
+      osaPayload.lastModified = isoNow;
+      osaPayload.encoding = 'UTF-8';
+      osaPayload.filetype = 'XML';
+
+      return osaPayload;
+    },
+
+    songMatchesOsaPayload(remoteSong, expectedSong) {
+      if (!remoteSong || !expectedSong) return false;
+
+      const remoteTitle = remoteSong.title || '';
+      const remoteLyrics = remoteSong.lyrics || '';
+      const remoteLastModified = remoteSong.lastModified || remoteSong.last_modified || '';
+
+      return remoteTitle === (expectedSong.title || '') &&
+        remoteLyrics === (expectedSong.lyrics || '') &&
+        remoteLastModified === (expectedSong.lastModified || '');
+    },
+
+    async waitForOsaSave(folder, filename, expectedSong, timeoutMs = 15000) {
+      const startedAt = Date.now();
+      let lastSeenSong = null;
+
+      while (Date.now() - startedAt < timeoutMs) {
+        const remoteSong = await osaApi.fetchSongData(this.osaEndpoint, folder, filename);
+        lastSeenSong = remoteSong;
+        if (this.songMatchesOsaPayload(remoteSong, expectedSong)) {
+          return remoteSong;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      }
+
+      const saveError = new Error("OSA did not return the saved song state before timeout");
+      saveError.lastSeenSong = lastSeenSong;
+      throw saveError;
     },
 
     buildSongXml() {
@@ -561,6 +706,7 @@ export default {
         this.song = this.normalizeSongFromXml(parsedSong);
         this.fileHandle = handle;
         this.currentRemoteOsaInfo = null;
+        this.currentRemoteOsaRaw = null;
         this.takeSongSnapshot();
 
         // Load YouTube if link exists
@@ -586,6 +732,7 @@ export default {
       this.song = SONG_DEFAULTS();
       this.fileHandle = null;
       this.currentRemoteOsaInfo = null;
+      this.currentRemoteOsaRaw = null;
       this.takeSongSnapshot();
       this.mostrarMetadata = true;
     },
@@ -621,6 +768,7 @@ export default {
         await writable.write(this.buildSongXml());
         await writable.close();
         this.fileHandle = handle;
+        this.currentRemoteOsaRaw = null;
         this.takeSongSnapshot();
         this.$refs.fileExplorer?.refreshRoot({ selectedName: handle.name });
         this.showAlert({ message: this.t.fileSaved });
@@ -646,6 +794,8 @@ export default {
 
         // FIX: fallback si el XML no contiene <song>
         this.song = this.normalizeSongFromXml(parsedSong);
+        this.currentRemoteOsaInfo = null;
+        this.currentRemoteOsaRaw = null;
         this.takeSongSnapshot();
 
         // Load YouTube if link exists
@@ -682,32 +832,67 @@ export default {
 
     async guardarEnOsa() {
       try {
+        this.osaRefreshSuppressedUntil = Date.now() + 15000;
         const songData = this.prepareSongForOsaJson();
-        // Inject remote metadata required by OSA API
+        // Inject required metadata for OSA save API.
         songData.folder = this.currentRemoteOsaInfo.folder;
         songData.filename = this.currentRemoteOsaInfo.filename;
+        songData.filetype = 'XML';
+        if (!songData.songid) {
+          songData.songid = `${songData.folder}/${songData.filename}`;
+        }
+
+        console.log("========== JSON PAYLOAD TO OSA ==========");
+        console.log(JSON.stringify(songData, null, 2));
+        console.log("=========================================");
 
         this.showAlert({ message: this.t.osaSaveRemote });
         await osaApi.saveSongToOsa(this.osaEndpoint, songData);
-        
-        // Trigger remote device to reload the song (replaces REFRESH websocket logic)
-        try {
-          await osaApi.sendRemoteCommand(this.osaEndpoint, songData.folder, songData.filename);
-        } catch (remoteErr) {
-          console.warn("Song saved, but failed to trigger remote load:", remoteErr);
-        }
+
+        const persistedSong = await this.waitForOsaSave(
+          songData.folder,
+          songData.filename,
+          songData
+        );
+
+        this.song = this.normalizeSongFromXml(persistedSong);
+        this.currentRemoteOsaRaw = persistedSong;
+        this.currentRemoteOsaInfo = {
+          folder: songData.folder,
+          filename: songData.filename,
+          id: persistedSong.id,
+          songid: persistedSong.songid || `${songData.folder}/${songData.filename}`,
+          filetype: persistedSong.filetype || 'XML'
+        };
 
         this.takeSongSnapshot();
+        this.osaRefreshSuppressedUntil = 0;
         this.showAlert({ message: this.t.osaSaveSuccess });
       } catch (err) {
+        this.osaRefreshSuppressedUntil = 0;
         console.error("Error saving to OSA:", err);
         const detail = err.message || "Unknown error";
+        const lastSeenSong = err.lastSeenSong || null;
         
         // Expose partial payload for debugging the 400 error
-        const payloadPreview = JSON.stringify(this.prepareSongForOsaJson()).substring(0, 100) + "...";
+        const debugPayload = this.prepareSongForOsaJson();
+        debugPayload.folder = this.currentRemoteOsaInfo?.folder || '';
+        debugPayload.filename = this.currentRemoteOsaInfo?.filename || '';
+        debugPayload.filetype = 'XML';
+        const expectedSummary = [
+          `[Expected title] ${debugPayload.title || ''}`,
+          `[Expected lastModified] ${debugPayload.lastModified || ''}`,
+          `[Expected lyrics] ${(debugPayload.lyrics || '').slice(0, 180)}`
+        ].join('\n');
+        const remoteSummary = lastSeenSong ? [
+          `[OSA title] ${lastSeenSong.title || ''}`,
+          `[OSA lastModified] ${lastSeenSong.lastModified || lastSeenSong.last_modified || ''}`,
+          `[OSA lyrics] ${(lastSeenSong.lyrics || '').slice(0, 180)}`
+        ].join('\n') : '[OSA response] No song state captured before timeout';
+        const payloadPreview = JSON.stringify(debugPayload, null, 2);
         this.showAlert({ 
-          message: `${this.t.osaError}: ${detail}\n\n[Debug Payload] ${payloadPreview}`, 
-          title: "Error 400 Debug" 
+          message: `${this.t.osaError}: ${detail}\n\n${expectedSummary}\n\n${remoteSummary}\n\n[Debug Payload]\n${payloadPreview}`, 
+          title: "OSA Save Debug" 
         });
       }
     },
@@ -906,6 +1091,10 @@ export default {
                         (payload && payload.action === 'REFRESH');
       
       if (isRefresh) {
+        if (Date.now() < this.osaRefreshSuppressedUntil) {
+          console.info("Ignoring REFRESH while OSA save sync is settling.");
+          return;
+        }
         this.fetchCurrentOsaSong();
       }
     },
@@ -916,9 +1105,13 @@ export default {
           // Confirm before overwriting if there are unsaved changes?
           // For now, let's just update if the user is in "Remote Sync" mode
           this.song = this.normalizeSongFromXml(osaSong);
+          this.currentRemoteOsaRaw = osaSong;
           this.currentRemoteOsaInfo = {
             folder: osaSong.folder || '',
-            filename: osaSong.filename || ''
+            filename: osaSong.filename || '',
+            id: osaSong.id,
+            songid: osaSong.songid || '',
+            filetype: osaSong.filetype || ''
           };
           this.takeSongSnapshot();
         }
@@ -935,11 +1128,25 @@ export default {
         );
         if (osaSong) {
           this.song = this.normalizeSongFromXml(osaSong);
+          this.currentRemoteOsaRaw = osaSong;
           this.currentRemoteOsaInfo = {
             folder: remoteSongInfo.folder,
-            filename: remoteSongInfo.filename
+            filename: remoteSongInfo.filename,
+            id: osaSong.id,
+            songid: osaSong.songid || `${remoteSongInfo.folder}/${remoteSongInfo.filename}`,
+            filetype: osaSong.filetype || ''
           };
           this.takeSongSnapshot();
+        }
+
+        try {
+          await osaApi.sendRemoteCommand(
+            this.osaEndpoint,
+            remoteSongInfo.folder,
+            remoteSongInfo.filename
+          );
+        } catch (remoteErr) {
+          console.warn("Song loaded in SEW, but OSA did not switch current song:", remoteErr);
         }
       } catch (e) {
         console.error("Failed to fetch remote song:", e);
@@ -1271,6 +1478,14 @@ button:active {
   color: var(--fg2);
   line-height: 1.5;
   margin: 0;
+}
+
+.alert-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 48vh;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .modal-buttons.vertical {

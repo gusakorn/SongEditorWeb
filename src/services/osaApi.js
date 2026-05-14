@@ -6,6 +6,26 @@ export function buildBaseUrl(endpoint) {
   return endpoint.replace(/\/+$/, "");
 }
 
+async function readResponseBody(response) {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return text;
+  }
+}
+
+function responseDetail(data) {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    return data.error || data.message || JSON.stringify(data);
+  }
+  return String(data);
+}
+
 export async function fetchSongLibrary(endpoint) {
   const url = `http://${buildBaseUrl(endpoint)}/api/list`;
   const response = await fetch(url);
@@ -35,8 +55,15 @@ export async function sendRemoteCommand(endpoint, folder, filename) {
     },
     body: JSON.stringify({ folder, filename })
   });
-  if (!response.ok) throw new Error(`Failed to send remote command: ${response.status}`);
-  return await response.json();
+
+  const body = await readResponseBody(response);
+  if (!response.ok) {
+    const detail = responseDetail(body);
+    const suffix = detail ? ` - ${detail}` : '';
+    throw new Error(`Failed to send remote command: ${response.status}${suffix}`);
+  }
+
+  return body ?? { ok: true };
 }
 export function createWebSocket(endpoint, onMessage, onOpen, onClose, onError) {
   const wsUrl = `ws://${buildBaseUrl(endpoint)}/updates`;
@@ -70,6 +97,13 @@ export async function saveSongToOsa(endpoint, songData) {
     },
     body: JSON.stringify(songData)
   });
-  if (!response.ok) throw new Error(`Failed to save song to OSA: ${response.status}`);
-  return await response.json();
+
+  const body = await readResponseBody(response);
+  if (!response.ok) {
+    const detail = responseDetail(body);
+    const suffix = detail ? ` - ${detail}` : '';
+    throw new Error(`Failed to save song to OSA: ${response.status}${suffix}`);
+  }
+
+  return body ?? { ok: true };
 }

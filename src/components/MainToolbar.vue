@@ -15,7 +15,7 @@
         <button class="btn-icon" @click="$emit('abrir-archivo')" :title="t.open">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><path d="M12 11v6"></path><path d="M9 14h6"></path></svg>
         </button>
-        <button class="btn-icon" @click="$emit('guardar-archivo')" :title="t.save">
+        <button class="btn-icon" @click="$emit('guardar-archivo')" :title="saveTooltip || t.save">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         </button>
         <button class="btn-icon" @click="$emit('guardar-como')" :title="t.saveAs">
@@ -112,6 +112,15 @@
         </button>
       </div>
 
+      <div
+        v-if="osaConnected"
+        class="osa-link-pill"
+        :class="osaLinkState"
+        :title="osaLinkTitle"
+      >
+        {{ osaLinkLabel }}
+      </div>
+
       <div class="separator-v"></div>
 
       <button class="btn-icon btn-preview-corner" @click="$emit('toggle-preview')" :title="t.preview">
@@ -132,7 +141,23 @@ export default {
     ytState: Number,
     ytReady: Boolean,
     osaConnected: Boolean,
-    osaConnecting: Boolean
+    osaConnecting: Boolean,
+    osaLinkState: {
+      type: String,
+      default: 'local'
+    },
+    osaLinkLabel: {
+      type: String,
+      default: ''
+    },
+    osaLinkTitle: {
+      type: String,
+      default: ''
+    },
+    saveTooltip: {
+      type: String,
+      default: ''
+    }
   },
   emits: [
     'toggle-explorer',
@@ -276,6 +301,33 @@ export default {
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+.osa-link-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 180px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.osa-link-pill.linked {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+.osa-link-pill.local {
+  color: var(--fg2);
 }
 
 .app-brand {
