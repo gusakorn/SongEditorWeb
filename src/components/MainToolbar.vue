@@ -44,13 +44,11 @@
             </svg>
           </button>
         </div>
-        <div class="player-info" v-if="ytReady">
+        <div class="player-info">
           <div class="marquee-container">
             <div class="marquee-content">{{ songTitle }}</div>
           </div>
-        </div>
-        <div v-else class="player-info player-placeholder no-link">
-          {{ t.noYoutube }}
+          <div v-if="!ytReady" class="player-status">{{ t.noYoutube }}</div>
         </div>
       </div>
       <div v-else class="player-placeholder">{{ t.noSong }}</div>
@@ -147,6 +145,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto;
 }
 
 .toolbar-center {
@@ -155,6 +154,7 @@ export default {
   justify-content: center;
   align-items: center;
   margin: 0 10px;
+  min-width: 0;
 }
 
 .player-container {
@@ -166,8 +166,10 @@ export default {
   border-radius: 100px;
   border: 1px solid var(--border);
   width: 100%;
+  max-width: 100%;
   height: 36px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .player-placeholder {
@@ -185,6 +187,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .btn-player {
@@ -215,6 +218,10 @@ export default {
   flex: 1;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
 }
 
 .marquee-container {
@@ -230,6 +237,15 @@ export default {
   padding-left: 0;
   animation: marquee 10s linear infinite;
   animation-play-state: paused;
+}
+
+.player-status {
+  font-size: 10px;
+  color: var(--fg2);
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .player-container:not(:hover) .marquee-content {

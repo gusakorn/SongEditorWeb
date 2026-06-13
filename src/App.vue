@@ -40,7 +40,7 @@
       v-model="song"
       ref="editor"
       :t="t"
-      :style="{ '--explorer-left': showExplorer ? '320px' : '0px' }"
+      :style="{ '--explorer-left': showExplorer ? '340px' : '0px' }"
     />
 
     <!-- Preview como panel lateral derecho -->
@@ -48,6 +48,7 @@
       v-show="showPreview"
       :open="showPreview"
       :song="song"
+      :modo="modo"
       :t="t"
       @update-song="song = $event"
       @close="showPreview = false"
@@ -131,26 +132,101 @@
           <h3>{{ t.helpTitle }}</h3>
         </div>
         <div class="help-content">
-          <div class="help-item">
-            <strong>{{ t.helpAbout }}</strong>
-            <span>{{ t.helpAboutText }}</span>
+          <div class="help-hero">
+            <p class="modal-text">{{ t.helpAboutText }}</p>
+            <div class="help-chip-row">
+              <span v-for="chip in t.helpHighlights" :key="chip" class="help-chip">{{ chip }}</span>
+            </div>
           </div>
-          <div class="help-item">
-            <strong>{{ t.helpExplorer }}</strong>
-            <span>{{ t.helpExplorerText }}</span>
-          </div>
-          <div class="help-item">
-            <strong>{{ t.helpPreview }}</strong>
-            <span>{{ t.helpPreviewText }}</span>
-          </div>
-          <div class="help-item">
-            <strong>{{ t.helpFormat }}</strong>
-            <span>{{ t.helpFormatText }}</span>
-          </div>
-          <div class="help-item">
-            <strong>{{ t.helpNote }}</strong>
-            <span>{{ t.helpNoteText }}</span>
-          </div>
+
+          <section class="help-block" :class="{ open: helpSections.quickStart }">
+            <button class="help-block-toggle" type="button" @click="toggleHelpSection('quickStart')">
+              <span class="help-summary-label">{{ t.helpQuickStart }}</span>
+              <span class="help-summary-icon">{{ helpSections.quickStart ? '−' : '+' }}</span>
+            </button>
+            <div v-if="helpSections.quickStart" class="help-block-body">
+              <ol class="help-steps">
+                <li v-for="step in t.helpQuickStartSteps" :key="step">{{ step }}</li>
+              </ol>
+            </div>
+          </section>
+
+          <section class="help-block" :class="{ open: helpSections.format }">
+            <button class="help-block-toggle" type="button" @click="toggleHelpSection('format')">
+              <span class="help-summary-label">{{ t.helpFormat }}</span>
+              <span class="help-summary-icon">{{ helpSections.format ? '−' : '+' }}</span>
+            </button>
+            <div v-if="helpSections.format" class="help-block-body">
+              <p class="help-lead">{{ t.helpFormatLead }}</p>
+              <div class="help-example-grid">
+                <div v-for="example in t.helpFormatExamples" :key="example.label" class="help-example-card">
+                  <strong>{{ example.label }}</strong>
+                  <span>{{ example.text }}</span>
+                  <pre>{{ example.code }}</pre>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="help-block" :class="{ open: helpSections.features }">
+            <button class="help-block-toggle" type="button" @click="toggleHelpSection('features')">
+              <span class="help-summary-label">{{ t.helpFeaturesTitle }}</span>
+              <span class="help-summary-icon">{{ helpSections.features ? '−' : '+' }}</span>
+            </button>
+            <div v-if="helpSections.features" class="help-block-body">
+              <div class="help-feature-grid">
+                <div class="help-feature-card">
+                  <strong>{{ t.helpExplorer }}</strong>
+                  <ul>
+                    <li v-for="item in t.helpExplorerItems" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="help-feature-card">
+                  <strong>{{ t.helpSetsTitle }}</strong>
+                  <ul>
+                    <li v-for="item in t.helpSetsItems" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="help-feature-card">
+                  <strong>{{ t.helpPreview }}</strong>
+                  <ul>
+                    <li v-for="item in t.helpPreviewItems" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="help-feature-card">
+                  <strong>{{ t.helpMetadataTitle }}</strong>
+                  <ul>
+                    <li v-for="item in t.helpMetadataItems" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="help-block" :class="{ open: helpSections.workflow }">
+            <button class="help-block-toggle" type="button" @click="toggleHelpSection('workflow')">
+              <span class="help-summary-label">{{ t.helpWorkflowTitle }}</span>
+              <span class="help-summary-icon">{{ helpSections.workflow ? '−' : '+' }}</span>
+            </button>
+            <div v-if="helpSections.workflow" class="help-block-body">
+              <ol class="help-steps">
+                <li v-for="step in t.helpWorkflowSteps" :key="step">{{ step }}</li>
+              </ol>
+            </div>
+          </section>
+
+          <section class="help-block" :class="{ open: helpSections.note }">
+            <button class="help-block-toggle" type="button" @click="toggleHelpSection('note')">
+              <span class="help-summary-label">{{ t.helpNote }}</span>
+              <span class="help-summary-icon">{{ helpSections.note ? '−' : '+' }}</span>
+            </button>
+            <div v-if="helpSections.note" class="help-block-body">
+              <ul class="help-list">
+                <li v-for="item in t.helpLimitationsItems" :key="item">{{ item }}</li>
+              </ul>
+            </div>
+          </section>
+
           <div class="help-footer">
             {{ t.helpContact }}
           </div>
@@ -192,8 +268,6 @@
       </div>
     </Transition>
 
-    <!-- Hidden YouTube Player Container -->
-    <div id="youtube-player-container" style="display: none;"></div>
     <div id="youtube-player-placeholder" style="display: none;"></div>
   </div>
 </template>
@@ -319,6 +393,13 @@ export default {
       unsavedResolve: null,
       // ── New UI states ──
       showHelpModal: false,
+      helpSections: {
+        quickStart: false,
+        format: false,
+        features: false,
+        workflow: false,
+        note: false
+      },
       alertModal: {
         show: false,
         title: '',
@@ -525,6 +606,12 @@ export default {
 
     openHelp() {
       this.showHelpModal = true;
+    },
+    toggleHelpSection(sectionKey) {
+      this.helpSections = {
+        ...this.helpSections,
+        [sectionKey]: !this.helpSections[sectionKey]
+      };
     },
 
     showAlert(config) {
@@ -1095,31 +1182,157 @@ button:active {
   border-color: var(--accent);
 }
 
+.help-modal {
+  width: min(820px, calc(100vw - 32px));
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+}
+
 .help-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 4px;
 }
 
-.help-item {
+.help-hero {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
 }
 
-.help-item strong {
+.help-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.help-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg3) 88%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: default;
+  user-select: none;
+}
+
+.help-block {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg3) 74%, transparent);
+  overflow: hidden;
+}
+
+.help-block-toggle {
+  width: 100%;
+  cursor: pointer;
+  padding: 12px 14px;
   font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+}
+
+.help-block-toggle:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.help-summary-label {
+  display: inline-block;
+}
+
+.help-summary-icon {
+  font-size: 16px;
+  color: var(--fg2);
+  line-height: 1;
+}
+
+.help-block-body {
+  padding: 0 14px 14px;
+}
+
+.help-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg2);
+}
+
+.help-steps,
+.help-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--fg2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.help-example-grid,
+.help-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.help-example-card,
+.help-feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg2) 90%, transparent);
+}
+
+.help-example-card strong,
+.help-feature-card strong {
+  font-size: 12px;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.help-item span {
+.help-example-card span,
+.help-feature-card li {
   font-size: 13px;
   color: var(--fg2);
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+.help-feature-card ul {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.help-example-card pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .help-footer {
@@ -1130,6 +1343,13 @@ button:active {
   color: var(--fg2);
   font-style: italic;
   text-align: center;
+}
+
+@media (max-width: 720px) {
+  .help-example-grid,
+  .help-feature-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Transiciones */

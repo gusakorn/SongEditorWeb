@@ -24,15 +24,96 @@ export const translations = {
 
     helpTitle: "Ayuda y Tips",
     helpAbout: "Acerca de",
-    helpAboutText: "SongEditorWeb es una herramienta basada y pensada para ser un complemento de OpenSongApp, no un competidor, tampoco planea competir contra OpenSong de escritorio. Su único objetivo es ser una alternativa, es decir un editor que pueda correr en navegadores web y por lo tanto traer más facilidades.",
+    helpAboutText: "SongEditorWeb es un editor local pensado para trabajar con canciones y sets de OpenSong/OpenSongApp desde una pantalla más grande, especialmente en PC. Su enfoque principal es editar mejor, previsualizar mejor y organizar mejor, no reemplazar todas las funciones de OSA.",
+    helpHighlights: ["Editor local", "Preview visual", "Songs y sets", "Exportación TXT", "Pensado para PC"],
+    helpQuickStart: "Inicio rápido",
+    helpQuickStartSteps: [
+      "En Songs, pulsa Seleccionar carpeta y elige tu carpeta raíz de canciones.",
+      "Abre una canción existente o crea una nueva desde la barra principal.",
+      "Edita letra, acordes, comentarios y secciones en el editor.",
+      "Abre Preview para revisar cómo se verá en phone, tablet, print o fullscreen.",
+      "Guarda los cambios y, si quieres, agrega la canción a un set."
+    ],
     helpExplorer: "Explorador",
     helpExplorerText: "Accede a tus archivos y setlists desde el panel izquierdo (☰📁).",
     helpPreview: "Preview",
     helpPreviewText: "Visualiza el resultado final en tiempo real en el panel derecho (☰👁).",
     helpFormat: "Formato OpenSong",
+    helpFormatLead: "SEW reconoce varias convenciones útiles del formato OpenSong para mostrar letra, acordes, comentarios y tablatura en el preview.",
     helpFormatText: "Para mirar las letras, acordes y secciones correctamente formateadas en la pista previa, usa un espacio \" \", antes de las letras, usa \".\" antes de los acordes y \"[Seccion]\" para organizar. Para más información visita la pagina de OpenSongApp.com",
+    helpFormatExamples: [
+      {
+        label: "Secciones",
+        text: "Usa encabezados entre corchetes para organizar la canción.",
+        code: "[Verse]\n[Chorus]\n[Bridge]"
+      },
+      {
+        label: "Acordes y letra",
+        text: "Las líneas de acordes empiezan con punto y la letra va debajo.",
+        code: ".G      D      Em     C\n This is my lyric line"
+      },
+      {
+        label: "Comentarios",
+        text: "Las líneas con punto y coma se muestran como notas visualmente distintas.",
+        code: ";(x2)\n;Capo 2"
+      },
+      {
+        label: "Tablatura",
+        text: "Las líneas tipo tab también usan punto y coma.",
+        code: ";e|-----0-----|\n;B|---1---1---|\n;G|---0---0---|"
+      },
+      {
+        label: "Salto de columna",
+        text: "Usa este marcador si quieres separar contenido en columnas o bloques.",
+        code: "!--"
+      }
+    ],
+    helpFeaturesTitle: "Qué puedes hacer hoy",
+    helpSetsTitle: "Sets",
+    helpMetadataTitle: "Metadata",
+    helpExplorerItems: [
+      "Elegir carpeta raíz local.",
+      "Navegar carpetas y subcarpetas.",
+      "Filtrar canciones por texto.",
+      "Abrir, renombrar y borrar archivos.",
+      "Agregar canciones al setlist desde el explorador."
+    ],
+    helpSetsItems: [
+      "Crear, abrir y guardar sets.",
+      "Agregar canciones individuales o todas las de la carpeta actual.",
+      "Reordenar canciones arrastrando.",
+      "Copiar o exportar el setlist como TXT.",
+      "Ver y exportar la duración total del set."
+    ],
+    helpPreviewItems: [
+      "Cambiar entre normal, phone, tablet, print y fullscreen.",
+      "Usar presets visuales y cambiar tamaño de fuente.",
+      "Previsualizar secciones, acordes, comments y tabs.",
+      "Usar impresión y scroll sincronizado."
+    ],
+    helpMetadataItems: [
+      "Editar título, artista, key, capo, tempo y duración.",
+      "Añadir time signature, tags, notes y presentation order.",
+      "Guardar links, CCLI, copyright, AKA e hymn number.",
+      "Usar esos datos luego en preview y exportación de sets."
+    ],
     helpNote: "Nota",
     helpNoteText: "SongEditorWeb tiene algunas funciones de OpenSongApp pero no todas debido a que solo quiere ser un editor web rápido que permita visualizar de forma inmediata como se vería en diferentes dispositivos y sincronizar el autoscroll para practicar. Muchas funciones no están disponibles y quizás no lo estén en el futuro, un ejemplo claro de ello es que SongEditorWeb no soporta actualmente el formato ChordPro, no tiene ninguna función relacionada al modo \"Presenter\" ni nada relacionado al modo \"Stage\".",
+    helpWorkflowTitle: "Flujo recomendado",
+    helpWorkflowSteps: [
+      "Abre tu carpeta de canciones.",
+      "Edita letra, acordes y secciones.",
+      "Revisa el resultado en Preview.",
+      "Completa metadata importante si hace falta.",
+      "Guarda la canción y agrégala a un set si aplica.",
+      "Exporta o copia el setlist cuando esté listo."
+    ],
+    helpLimitationsItems: [
+      "SEW complementa a OSA; no intenta reemplazar todas sus funciones.",
+      "Está orientado principalmente a edición local en escritorio.",
+      "Algunas funciones avanzadas de OSA no están presentes.",
+      "ChordPro, Presenter y Stage no forman parte del enfoque actual."
+    ],
     helpContact: "Para cualquier duda, insulto o comentario: Gusakorn@gmail.com",
     btnClose: "Cerrar",
     editorPlaceholder: "Escribe aquí las letras y acordes...\nEjemplo:\n[Verse]\n.G      C\nLínea de acordes arriba\n Letra debajo, no olvides agregar un espacio al principio.\n\n[Chorus]\n.D    Em\nAcorde del coro\n",
@@ -84,6 +165,15 @@ export const translations = {
 
     // Explorer
     files: "Archivos",
+    songs: "Songs",
+    sets: "Sets",
+    library: "Biblioteca",
+    filterSongs: "Filtrar canciones de esta carpeta",
+    noSongsInFolder: "No hay canciones visibles en esta carpeta",
+    noSets: "No hay sets en esta carpeta",
+    refreshLibrary: "Refrescar",
+    selectSet: "Elegir set",
+    selectSetHint: "Selecciona un set guardado o crea uno nuevo.",
     pickRoot: "Elegir carpeta raíz",
     changeRoot: "Cambiar carpeta",
     noFolder: "Sin carpeta seleccionada",
@@ -96,18 +186,32 @@ export const translations = {
     openSetlist: "Abrir setlist",
     addAll: "Agregar todas las canciones",
     saveSetlist: "Guardar setlist",
-    dragToReorder: "Arrastrar para reordenar",
+    exportSetlistText: "Exportar setlist",
+    copySetlistText: "Copiar setlist",
+    exportTxt: "Exportar TXT",
+    exportFieldNumbering: "Numeración",
+    exportFieldFilename: "Nombre de archivo",
+    exportFieldSetDuration: "Duración total",
+    exportSeparator: "Separador",
+    exportSeparatorPipe: "Barra vertical |",
+    exportSeparatorDash: "Guion -",
+    exportSeparatorTab: "Tabulación",
+    moveUp: "Subir",
+    moveDown: "Bajar",
+    dragToReorder: "Mover",
     remove: "Quitar",
+    moreActions: "Más acciones",
     rename: "Renombrar",
     delete: "Borrar",
     renamePrompt: "Nuevo nombre:",
     deleteConfirm: "¿Borrar el archivo permanentemente?",
     renameInvalidFileType: "Ese nombre haría que el archivo deje de verse como canción en el explorador. Usa una extensión compatible o ninguna.",
     confirmNewSetlist: "¿Descartar setlist actual y crear uno nuevo?",
-    setlistNamePrompt: "Nombre del setlist:",
     setlistEmpty: "El setlist está vacío. Agrega canciones primero.",
     mySetlist: "Mi Setlist",
     setlistSaved: "Setlist guardado correctamente",
+    setlistCopied: "Setlist copiada al portapapeles",
+    setlistTextExported: "Setlist exportada como texto",
     errorOpenSetlist: "No se pudo leer el setlist. Verifica que sea un archivo OpenSong válido.",
     restoreFilesAccess: "Restaurar acceso a archivos",
     restoreSetlistsAccess: "Restaurar acceso a setlists",
@@ -120,6 +224,7 @@ export const translations = {
     print: "Imprimir",
     syncScrollStart: "Iniciar/Reanudar scroll sincronizado",
     syncScrollPause: "Pausar scroll sincronizado",
+    previewStyle: "Estilo visual",
     decreaseFont: "Reducir fuente",
     increaseFont: "Aumentar fuente",
     closePreview: "Cerrar preview",
@@ -135,6 +240,8 @@ export const translations = {
     errorDelete: "No se pudo borrar el archivo.",
     browserNotSupported: "Navegador no soportado (usa Chrome o Edge)",
     errorSaveSetlist: "Error al guardar el setlist",
+    errorCopySetlist: "No se pudo copiar la setlist",
+    errorExportSetlist: "No se pudo exportar la setlist",
     alertTitle: "Aviso",
     noSong: "Selecciona una canción para empezar",
     noYoutube: "Agrega un link de YouTube en Metadatos"
@@ -164,15 +271,96 @@ export const translations = {
 
     helpTitle: "Help & Tips",
     helpAbout: "About",
-    helpAboutText: "SongEditorWeb is a tool designed to be a companion to OpenSongApp, not a competitor nor does it plan to compete against OpenSong Desktop. Its sole objective is to provide an editor that can run in web browsers and therefore bring more conveniences.",
+    helpAboutText: "SongEditorWeb is a local editor built for working with OpenSong/OpenSongApp songs and sets from a larger screen, especially on PC. Its main focus is to improve editing, previewing and organizing, not to replace every OSA feature.",
+    helpHighlights: ["Local editor", "Visual preview", "Songs and sets", "TXT export", "PC-first workflow"],
+    helpQuickStart: "Quick start",
+    helpQuickStartSteps: [
+      "In Songs, click Select folder and choose your root songs folder.",
+      "Open an existing song or create a new one from the main toolbar.",
+      "Edit lyrics, chords, comments and sections in the editor.",
+      "Open Preview to check how the song looks in phone, tablet, print or fullscreen.",
+      "Save your changes and add the song to a set if needed."
+    ],
     helpExplorer: "Explorer",
     helpExplorerText: "Access your files and setlists from the left panel (☰📁).",
     helpPreview: "Preview",
     helpPreviewText: "View the final result in real-time in the right panel (☰👁).",
     helpFormat: "OpenSong Format",
+    helpFormatLead: "SEW understands several useful OpenSong conventions to display lyrics, chords, comments and tabs inside the preview.",
     helpFormatText: "To view lyrics, chords, and sections correctly formatted in the preview, use a space \" \" before lyrics, use \".\" before chords, and \"[Section]\" to organize. For more information, visit OpenSongApp.com",
+    helpFormatExamples: [
+      {
+        label: "Sections",
+        text: "Use bracket headers to organize the song.",
+        code: "[Verse]\n[Chorus]\n[Bridge]"
+      },
+      {
+        label: "Chords and lyrics",
+        text: "Chord lines start with a dot and lyrics go below.",
+        code: ".G      D      Em     C\n This is my lyric line"
+      },
+      {
+        label: "Comments",
+        text: "Semicolon lines are shown as visually distinct notes.",
+        code: ";(x2)\n;Capo 2"
+      },
+      {
+        label: "Tablature",
+        text: "Tab-like lines also use a semicolon prefix.",
+        code: ";e|-----0-----|\n;B|---1---1---|\n;G|---0---0---|"
+      },
+      {
+        label: "Column break",
+        text: "Use this marker when you want to split content into columns or blocks.",
+        code: "!--"
+      }
+    ],
+    helpFeaturesTitle: "What SEW can do now",
+    helpSetsTitle: "Sets",
+    helpMetadataTitle: "Metadata",
+    helpExplorerItems: [
+      "Choose a local root folder.",
+      "Browse folders and subfolders.",
+      "Filter songs by text.",
+      "Open, rename and delete files.",
+      "Add songs to the setlist from the explorer."
+    ],
+    helpSetsItems: [
+      "Create, open and save sets.",
+      "Add individual songs or all songs from the current folder.",
+      "Reorder songs by dragging.",
+      "Copy or export the setlist as TXT.",
+      "View and export the total set duration."
+    ],
+    helpPreviewItems: [
+      "Switch between normal, phone, tablet, print and fullscreen.",
+      "Use visual presets and adjust font size.",
+      "Preview sections, chords, comments and tabs.",
+      "Use printing and synced scroll."
+    ],
+    helpMetadataItems: [
+      "Edit title, artist, key, capo, tempo and duration.",
+      "Add time signature, tags, notes and presentation order.",
+      "Store links, CCLI, copyright, AKA and hymn number.",
+      "Reuse that data in preview and set export."
+    ],
     helpNote: "Note",
     helpNoteText: "SongEditorWeb has some OpenSongApp features but not all, as it only aims to be a quick web editor that allows immediate visualization of how it would look on different devices and synchronizing autoscroll for practice. Many features are not available and may not be in the future; a clear example is that SongEditorWeb currently does not support the ChordPro format, has no features related to \"Presenter\" mode, nor anything related to \"Stage\" mode.",
+    helpWorkflowTitle: "Suggested workflow",
+    helpWorkflowSteps: [
+      "Open your songs folder.",
+      "Edit lyrics, chords and sections.",
+      "Review the result in Preview.",
+      "Complete important metadata if needed.",
+      "Save the song and add it to a set if applicable.",
+      "Export or copy the setlist when it is ready."
+    ],
+    helpLimitationsItems: [
+      "SEW complements OSA; it does not try to replace every feature.",
+      "It is mainly focused on local desktop editing.",
+      "Some advanced OSA features are not present.",
+      "ChordPro, Presenter and Stage are outside the current focus."
+    ],
     helpContact: "For any questions, insults, or comments: Gusakorn@gmail.com",
     btnClose: "Close",
     editorPlaceholder: "Write lyrics and chords here...\nExample:\n[Verse]\n.G      C\nChord line above\n Lyrics below, don't forget to add a space at the beginning.\n\n[Chorus]\n.D    Em\nChorus chord\n",
@@ -224,6 +412,15 @@ export const translations = {
 
     // Explorer
     files: "Files",
+    songs: "Songs",
+    sets: "Sets",
+    library: "Library",
+    filterSongs: "Filter songs in this folder",
+    noSongsInFolder: "No visible songs in this folder",
+    noSets: "No sets in this folder",
+    refreshLibrary: "Refresh",
+    selectSet: "Choose set",
+    selectSetHint: "Select a saved set or create a new one.",
     pickRoot: "Pick root folder",
     changeRoot: "Change folder",
     noFolder: "No folder selected",
@@ -236,18 +433,32 @@ export const translations = {
     openSetlist: "Open existing setlist",
     addAll: "Add all songs",
     saveSetlist: "Save setlist",
-    dragToReorder: "Drag to reorder",
+    exportSetlistText: "Export setlist",
+    copySetlistText: "Copy setlist",
+    exportTxt: "Export TXT",
+    exportFieldNumbering: "Numbering",
+    exportFieldFilename: "Filename",
+    exportFieldSetDuration: "Total duration",
+    exportSeparator: "Separator",
+    exportSeparatorPipe: "Vertical bar |",
+    exportSeparatorDash: "Dash -",
+    exportSeparatorTab: "Tab",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    dragToReorder: "Move",
     remove: "Remove",
+    moreActions: "More actions",
     rename: "Rename",
     delete: "Delete",
     renamePrompt: "New name:",
     deleteConfirm: "Delete file permanently?",
     renameInvalidFileType: "That name would make the file stop appearing as a song in the explorer. Use a supported extension or none at all.",
     confirmNewSetlist: "Discard current setlist and create a new one?",
-    setlistNamePrompt: "Setlist name:",
     setlistEmpty: "Setlist is empty. Add songs first.",
     mySetlist: "My Setlist",
     setlistSaved: "Setlist saved successfully",
+    setlistCopied: "Setlist copied to clipboard",
+    setlistTextExported: "Setlist exported as text",
     errorOpenSetlist: "Could not read setlist. Verify it is a valid OpenSong file.",
     restoreFilesAccess: "Restore file access",
     restoreSetlistsAccess: "Restore setlist access",
@@ -260,6 +471,7 @@ export const translations = {
     print: "Print",
     syncScrollStart: "Start/Resume sync scroll",
     syncScrollPause: "Pause sync scroll",
+    previewStyle: "Visual style",
     decreaseFont: "Decrease font size",
     increaseFont: "Increase font size",
     closePreview: "Close preview",
@@ -275,6 +487,8 @@ export const translations = {
     errorDelete: "Could not delete file.",
     browserNotSupported: "Browser not supported (use Chrome or Edge)",
     errorSaveSetlist: "Error saving setlist",
+    errorCopySetlist: "Could not copy the setlist",
+    errorExportSetlist: "Could not export the setlist",
     alertTitle: "Notice",
     noSong: "Select a song to start",
     noYoutube: "Add a YouTube link in Metadata"
